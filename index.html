@@ -7,105 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-    --bg:#F5EFE3; --ink:#1C1F26; --muted:#6B6455; --line:#DDD0BC;
-    --teal:#D9793E; --teal-ink:#A85A2A; --gold:#C98A2B; --card:#FFF8F0;
-    box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#1A1613; --ink:#EDEAE2; --muted:#A6A092; --line:#332B24;
-      --teal:#E8935D; --teal-ink:#F2B487; --gold:#E0B15C; --card:#221C18;
-    }
-  }
-  :root[data-theme="dark"]{
-    --bg:#1A1613; --ink:#EDEAE2; --muted:#A6A092; --line:#332B24;
-    --teal:#E8935D; --teal-ink:#F2B487; --gold:#E0B15C; --card:#221C18;
-  }
-  html{scroll-padding-top:env(safe-area-inset-top,0px);}
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;}
-  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;line-height:1.1;}
-  .wrap{max-width:1080px;margin:0 auto;padding:0 24px;}
-  a{color:inherit;}
-
-  header{position:sticky;top:0;top:env(safe-area-inset-top,0px);background:color-mix(in srgb, var(--bg) 88%, transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:20;}
-  .navbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;max-width:1080px;margin:0 auto;}
-  .logo{font-family:'Fraunces',serif;font-size:22px;font-weight:600;display:flex;align-items:center;gap:8px;}
-  .logo-mark{width:10px;height:10px;border-radius:50%;background:var(--gold);}
-  nav{display:flex;gap:28px;font-size:15px;color:var(--muted);}
-  nav a{text-decoration:none;cursor:pointer;}
-  nav a:hover{color:var(--ink);}
-  .btn{display:inline-block;padding:11px 22px;border-radius:6px;font-size:15px;font-weight:600;cursor:pointer;border:1px solid transparent;text-decoration:none;transition:transform .12s ease;}
-  .btn:active{transform:scale(.97);}
-  .btn-primary{background:var(--teal);color:#fff;}
-  .btn-ghost{border-color:var(--line);color:var(--ink);background:transparent;}
-
-  .dropdown{position:relative;}
-  .dropdown-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px;min-width:170px;box-shadow:0 10px 30px rgba(0,0,0,.12);z-index:30;}
-  .dropdown-menu.open{display:block;}
-  .dropdown-menu a{display:block;padding:9px 12px;border-radius:6px;font-size:14px;text-decoration:none;color:var(--ink);}
-  .dropdown-menu a:hover{background:var(--bg);}
-
-  .hero{padding:88px 0 64px;display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;}
-  .hero h1{font-size:clamp(34px,4.6vw,54px);letter-spacing:-.01em;max-width:11ch;}
-  .hero p{color:var(--muted);font-size:18px;max-width:46ch;margin:20px 0 30px;}
-  .hero-cta{display:flex;gap:14px;flex-wrap:wrap;}
-  .stat-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:24px;}
-  .stat-row{display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);}
-  .stat-row:last-child{border-bottom:none;}
-  .stat-num{font-family:'Fraunces',serif;font-size:22px;}
-  .stat-label{color:var(--muted);font-size:14px;}
-
-  section{padding:64px 0;border-top:1px solid var(--line);}
-  .section-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;gap:24px;flex-wrap:wrap;}
-  .section-head h2{font-size:30px;}
-  .section-head p{color:var(--muted);max-width:42ch;margin-top:8px;}
-
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;}
-  .step{border-left:2px solid var(--teal);padding-left:18px;}
-  .step .n{font-family:'Fraunces',serif;color:var(--gold);font-size:15px;margin-bottom:8px;display:block;}
-  .step h3{font-size:19px;margin-bottom:8px;}
-  .step p{color:var(--muted);font-size:15px;margin:0;}
-
-  .filters{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;}
-  .chip{padding:8px 16px;border:1px solid var(--line);border-radius:999px;font-size:14px;cursor:pointer;background:var(--card);color:var(--muted);}
-  .chip.active{border-color:var(--teal);color:var(--teal-ink);background:color-mix(in srgb, var(--teal) 12%, var(--card));}
-
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px;}
-  .card-top{display:flex;gap:12px;align-items:center;margin-bottom:14px;}
-  .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--gold));flex-shrink:0;}
-  .card h3{font-size:17px;}
-  .card .role{color:var(--muted);font-size:14px;}
-  .card p.desc{font-size:14px;color:var(--muted);margin:12px 0 14px;}
-  .card-foot{display:flex;justify-content:space-between;align-items:center;font-size:14px;}
-  .rate{font-weight:700;font-family:'Fraunces',serif;}
-  .stars{color:var(--gold);font-size:13px;}
-
-  form{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:30px;display:grid;gap:16px;max-width:640px;}
-  label{font-size:14px;font-weight:600;display:block;margin-bottom:6px;}
-  input,textarea,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font-family:inherit;font-size:15px;}
-  textarea{resize:vertical;min-height:88px;}
-  .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-
-  .jobs{display:grid;gap:12px;margin-top:28px;}
-  .job{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:16px;}
-  .job-info h4{font-size:15px;margin-bottom:4px;font-family:'Inter',sans-serif;font-weight:600;}
-  .job-info span{color:var(--muted);font-size:13px;}
-  .job-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;text-decoration:underline;}
-  .empty{color:var(--muted);font-size:14px;font-style:italic;}
-
-  footer{padding:36px 0 calc(36px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
-
-  @media (max-width:760px){
-    .hero{grid-template-columns:1fr;padding-top:48px;}
-    nav{display:none;}
-    .steps,.grid{grid-template-columns:1fr;}
-    .row2{grid-template-columns:1fr;}
-  }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -117,12 +19,12 @@
       <a href="#freelancers">Freelancers</a>
     </nav>
     <div style="display:flex;gap:10px;">
-      <a class="btn btn-ghost" href="#" onclick="entrar()">Entrar</a>
+      <a class="btn btn-ghost" href="#" onclick="entrar(); return false;">Entrar</a>
       <div class="dropdown">
         <button class="btn btn-primary" id="cadastroBtn" type="button">Cadastrar</button>
         <div class="dropdown-menu" id="cadastroMenu">
-          <a href="#" onclick="cadastrarCliente()">Sou cliente</a>
-          <a href="#" onclick="cadastrarFreelancer()">Sou freelancer</a>
+          <a href="#" onclick="cadastrarCliente(); return false;">Sou cliente</a>
+          <a href="#" onclick="cadastrarFreelancer(); return false;">Sou freelancer</a>
         </div>
       </div>
     </div>
@@ -132,7 +34,7 @@
 <div class="wrap">
   <section class="hero" style="border:none;padding-top:88px;">
     <div>
-      <h1>Conectando quem precisa a quem sabe fazer, em São Paulo.</h1>
+      <h1>Conectando quem precisa a quem sabe fazer.</h1>
       <p>Freelancers e clientes do estado de São Paulo, num só lugar. Publique uma vaga ou mostre seu trabalho — sem taxas escondidas, sem intermediário complicado.</p>
       <div class="hero-cta">
         <a class="btn btn-primary" href="#freelancers">Quero contratar</a>
@@ -178,63 +80,85 @@
   </div>
 </footer>
 
-<script>
-document.getElementById('year').textContent = new Date().getFullYear();
+<!-- Janela de LOGIN -->
+<div class="modal" id="modalLogin">
+  <div class="modal-box">
+    <button class="modal-close" type="button" data-fechar aria-label="Fechar">&times;</button>
+    <h2>Entrar</h2>
+    <p>Acesse sua conta para conversar com clientes e freelancers.</p>
+    <form id="loginForm" novalidate>
+      <div>
+        <label for="loginEmail">E-mail</label>
+        <input type="email" id="loginEmail" autocomplete="email" required>
+      </div>
+      <div>
+        <label for="loginSenha">Senha</label>
+        <input type="password" id="loginSenha" autocomplete="current-password" required>
+      </div>
+      <div id="loginMsg" class="auth-msg" role="alert"></div>
+      <button class="btn btn-primary" type="submit" id="btnEntrar">Entrar</button>
+    </form>
+    <p class="auth-alt">Ainda não tem conta? <a onclick="cadastrarCliente()">Cadastre-se</a></p>
+  </div>
+</div>
 
-// Avisos temporários enquanto as páginas reais não existem
-function entrar() {
-  alert("Página de login em desenvolvimento.");
-}
+<!-- Janela de CADASTRO -->
+<div class="modal" id="modalCadastro">
+  <div class="modal-box">
+    <button class="modal-close" type="button" data-fechar aria-label="Fechar">&times;</button>
+    <h2>Criar conta</h2>
+    <p id="cadSubtitulo">Cadastre-se para começar.</p>
 
-function cadastrarCliente() {
-  alert("Cadastro de cliente em desenvolvimento.");
-}
+    <div class="tipo-switch">
+      <button type="button" class="chip" id="tabCliente">Sou cliente</button>
+      <button type="button" class="chip" id="tabFreelancer">Sou freelancer</button>
+    </div>
 
-function cadastrarFreelancer() {
-  alert("Cadastro de freelancer em desenvolvimento.");
-}
+    <form id="cadastroForm" novalidate>
+      <div>
+        <label for="cadNome">Nome completo</label>
+        <input type="text" id="cadNome" autocomplete="name" required>
+      </div>
+      <div>
+        <label for="cadEmail">E-mail</label>
+        <input type="email" id="cadEmail" autocomplete="email" required>
+      </div>
+      <div class="row2">
+        <div>
+          <label for="cadSenha">Senha</label>
+          <input type="password" id="cadSenha" autocomplete="new-password" minlength="6" required>
+        </div>
+        <div>
+          <label for="cadSenha2">Confirmar senha</label>
+          <input type="password" id="cadSenha2" autocomplete="new-password" minlength="6" required>
+        </div>
+      </div>
+      <div>
+        <label for="cadTelefone">Telefone</label>
+        <input type="tel" id="cadTelefone" autocomplete="tel" placeholder="(11) 90000-0000" required>
+      </div>
 
-// Dropdown do botão "Cadastrar"
-const cadastroBtn = document.getElementById('cadastroBtn');
-const cadastroMenu = document.getElementById('cadastroMenu');
-cadastroBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  cadastroMenu.classList.toggle('open');
-});
-document.addEventListener('click', () => cadastroMenu.classList.remove('open'));
-cadastroMenu.addEventListener('click', (e) => e.stopPropagation());
+      <!-- Campos só para freelancer -->
+      <div id="camposFreelancer" class="hidden" style="display:grid;gap:16px;">
+        <div>
+          <label for="cadValorHora">Valor por hora (R$)</label>
+          <input type="number" id="cadValorHora" min="0" step="1" placeholder="Ex.: 80">
+        </div>
+        <div>
+          <label for="cadDescricao">Sobre você</label>
+          <textarea id="cadDescricao" maxlength="300" placeholder="Conte brevemente o que você faz."></textarea>
+        </div>
+      </div>
 
-const spCities = ["São Paulo","Campinas","Santos","Sorocaba","Ribeirão Preto","São José dos Campos","Sumaré","Osasco"];
+      <div id="cadMsg" class="auth-msg" role="alert"></div>
+      <button class="btn btn-primary" type="submit" id="btnCadastrar">Criar conta</button>
+    </form>
 
-const freelancers = []; // será preenchido com os dados do banco (Supabase)
+    <p class="auth-alt">Já tem conta? <a onclick="entrar()">Entrar</a></p>
+  </div>
+</div>
 
-const cats = ["Todos", ...new Set(freelancers.map(f=>f.cat))];
-let activeCat = "Todos";
-
-function renderFilters(){
-  const el = document.getElementById('filters');
-  el.innerHTML = cats.map(c=>`<button class="chip ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`).join('');
-  el.querySelectorAll('.chip').forEach(btn=>{
-    btn.addEventListener('click', ()=>{ activeCat = btn.dataset.cat; renderFilters(); renderGrid(); });
-  });
-}
-
-function renderGrid(){
-  const list = activeCat === "Todos" ? freelancers : freelancers.filter(f=>f.cat===activeCat);
-  if (!list.length) {
-    document.getElementById('freelancerGrid').innerHTML = '<p style="color:var(--muted);">Nenhum freelancer cadastrado ainda.</p>';
-    return;
-  }
-  document.getElementById('freelancerGrid').innerHTML = list.map(f=>`
-    <div class="card">
-      <div class="card-top"><div class="avatar"></div><div><h3>${f.name}</h3><div class="role">${f.role} · ${f.city}</div></div></div>
-      <p class="desc">${f.desc}</p>
-      <div class="card-foot"><span class="rate">${f.rate}</span><span class="stars">${f.stars}</span></div>
-    </div>`).join('');
-}
-
-renderFilters();
-renderGrid();
-</script>
+<!-- Código do site -->
+<script src="script.js"></script>
 </body>
 </html>

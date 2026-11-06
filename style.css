@@ -95,3 +95,23 @@ footer{padding:36px 0 calc(36px + env(safe-area-inset-bottom,0px));color:var(--m
   .steps,.grid{grid-template-columns:1fr;}
   .row2{grid-template-columns:1fr;}
 }
+
+/* ===== Login e cadastro (janelas) ===== */
+.modal{position:fixed;inset:0;background:rgba(20,16,12,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:100;overflow-y:auto;}
+.modal.open{display:flex;}
+.modal-box{background:var(--bg);border:1px solid var(--line);border-radius:12px;width:100%;max-width:480px;padding:28px;position:relative;margin:auto;}
+.modal-box h2{font-size:26px;margin-bottom:6px;}
+.modal-box > p{color:var(--muted);margin:0 0 20px;font-size:15px;}
+.modal-box form{max-width:none;padding:0;border:none;background:transparent;}
+.modal-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:26px;line-height:1;color:var(--muted);cursor:pointer;}
+.auth-msg{font-size:14px;padding:10px 12px;border-radius:6px;display:none;}
+.auth-msg.erro{display:block;background:color-mix(in srgb, #c0392b 14%, var(--card));color:#c0392b;border:1px solid #c0392b;}
+.auth-msg.ok{display:block;background:color-mix(in srgb, #2e8b57 14%, var(--card));color:#2e8b57;border:1px solid #2e8b57;}
+.auth-alt{margin-top:16px;font-size:14px;color:var(--muted);text-align:center;}
+.auth-alt a{color:var(--teal-ink);font-weight:600;cursor:pointer;}
+.tipo-switch{display:flex;gap:8px;margin-bottom:18px;}
+.tipo-switch .chip{flex:1;text-align:center;}
+.hidden{display:none !important;}
+button.btn{font-family:inherit;}
+button.btn:disabled{opacity:.6;cursor:wait;}
+.user-area{display:flex;align-items:center;gap:12px;font-size:14px;}
