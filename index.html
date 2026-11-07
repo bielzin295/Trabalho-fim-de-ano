@@ -13,18 +13,28 @@
 
 <header>
   <div class="navbar">
-    <div class="logo"><span class="logo-mark"></span>Freelancer Paulista</div>
+    <a class="logo" href="#" id="logoInicio"><span class="logo-mark"></span>Freelancer Paulista</a>
     <nav>
       <a href="#como-funciona">Como funciona</a>
       <a href="#freelancers">Freelancers</a>
     </nav>
-    <div style="display:flex;gap:10px;">
+    <div style="display:flex;gap:10px;" id="areaVisitante">
       <a class="btn btn-ghost" href="#" onclick="entrar(); return false;">Entrar</a>
       <div class="dropdown">
         <button class="btn btn-primary" id="cadastroBtn" type="button">Cadastrar</button>
         <div class="dropdown-menu" id="cadastroMenu">
           <a href="#" onclick="cadastrarCliente(); return false;">Sou cliente</a>
           <a href="#" onclick="cadastrarFreelancer(); return false;">Sou freelancer</a>
+        </div>
+      </div>
+    </div>
+    <div class="user-area hidden" id="areaUsuario">
+      <span id="nomeUsuario"></span>
+      <div class="dropdown">
+        <button class="perfil-foto" type="button" id="fotoUsuario" aria-label="Menu da conta"></button>
+        <div class="dropdown-menu" id="menuUsuario">
+          <a href="#" id="btnPerfil">Personalizar perfil</a>
+          <a href="#" id="btnSair">Sair</a>
         </div>
       </div>
     </div>
@@ -37,14 +47,13 @@
       <h1>Conectando quem precisa a quem sabe fazer.</h1>
       <p>Freelancers e clientes do estado de São Paulo, num só lugar. Publique uma vaga ou mostre seu trabalho — sem taxas escondidas, sem intermediário complicado.</p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="#freelancers">Quero contratar</a>
-        <a class="btn btn-ghost" href="#freelancers">Sou freelancer</a>
+        <a class="btn btn-primary" href="#freelancers" id="heroContratar">Quero contratar</a>
+        <a class="btn btn-ghost" href="#freelancers" id="heroFreelancer">Sou freelancer</a>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-row"><span class="stat-label">Freelancers ativos em SP</span><span class="stat-num">2.480</span></div>
+      <div class="stat-row"><span class="stat-label">Freelancers ativos em SP</span><span class="stat-num" id="statFreelancers">0</span></div>
       <div class="stat-row"><span class="stat-label">Cidades do estado atendidas</span><span class="stat-num">38</span></div>
-      <div class="stat-row"><span class="stat-label">Tempo médio até a proposta</span><span class="stat-num">4h</span></div>
     </div>
   </section>
 </div>
@@ -137,6 +146,10 @@
         <label for="cadTelefone">Telefone</label>
         <input type="tel" id="cadTelefone" autocomplete="tel" placeholder="(11) 90000-0000" required>
       </div>
+      <div>
+        <label for="cadFoto">Foto de perfil</label>
+        <input type="file" id="cadFoto" accept="image/*">
+      </div>
 
       <!-- Campos só para freelancer -->
       <div id="camposFreelancer" class="hidden" style="display:grid;gap:16px;">
@@ -159,6 +172,53 @@
 </div>
 
 <!-- Código do site -->
+<!-- Janela de PERSONALIZAR PERFIL -->
+<div class="modal" id="modalPerfil">
+  <div class="modal-box">
+    <button class="modal-close" type="button" data-fechar aria-label="Fechar">&times;</button>
+    <h2>Personalizar perfil</h2>
+    <p id="perfSubtitulo">Atualize seus dados.</p>
+
+    <form id="perfilForm" novalidate>
+      <div class="perfil-foto-linha">
+        <div class="perfil-foto grande" id="fotoPerfilPreview"></div>
+        <div style="flex:1;">
+          <label for="perfFoto">Foto de perfil</label>
+          <input type="file" id="perfFoto" accept="image/*">
+          <button type="button" class="job-del" id="btnRemoverFoto">Remover foto</button>
+        </div>
+      </div>
+      <div>
+        <label for="perfNome">Nome completo</label>
+        <input type="text" id="perfNome" autocomplete="name" required>
+      </div>
+      <div>
+        <label for="perfEmail">E-mail</label>
+        <input type="email" id="perfEmail" disabled>
+      </div>
+      <div>
+        <label for="perfTelefone">Telefone</label>
+        <input type="tel" id="perfTelefone" autocomplete="tel" placeholder="(11) 90000-0000" required>
+      </div>
+
+      <!-- Campos só para freelancer -->
+      <div id="perfCamposFreelancer" class="hidden" style="display:grid;gap:16px;">
+        <div>
+          <label for="perfValorHora">Valor por hora (R$)</label>
+          <input type="number" id="perfValorHora" min="0" step="1" placeholder="Ex.: 80">
+        </div>
+        <div>
+          <label for="perfDescricao">Sobre você</label>
+          <textarea id="perfDescricao" maxlength="300" placeholder="Conte brevemente o que você faz."></textarea>
+        </div>
+      </div>
+
+      <div id="perfMsg" class="auth-msg" role="alert"></div>
+      <button class="btn btn-primary" type="submit">Salvar alterações</button>
+    </form>
+  </div>
+</div>
+
 <script src="script.js"></script>
 </body>
 </html>

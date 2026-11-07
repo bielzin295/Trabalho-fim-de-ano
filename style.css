@@ -115,3 +115,11 @@ footer{padding:36px 0 calc(36px + env(safe-area-inset-bottom,0px));color:var(--m
 button.btn{font-family:inherit;}
 button.btn:disabled{opacity:.6;cursor:wait;}
 .user-area{display:flex;align-items:center;gap:12px;font-size:14px;}
+.logo{text-decoration:none;cursor:pointer;}
+.perfil-foto{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--teal),var(--gold)) center/cover no-repeat;}
+.perfil-foto.sem-foto{background:var(--line);color:var(--muted);overflow:hidden;}
+button.perfil-foto{border:none;padding:0;cursor:pointer;font-family:inherit;}
+.perfil-foto.grande{width:84px;height:84px;}
+.perfil-foto-linha{display:flex;gap:16px;align-items:center;}
+.perfil-foto-linha .job-del{margin-top:6px;padding:0;}
+input:disabled{opacity:.6;cursor:not-allowed;}
