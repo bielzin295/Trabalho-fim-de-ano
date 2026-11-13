@@ -29,6 +29,7 @@
       </div>
     </div>
     <div class="user-area hidden" id="areaUsuario">
+      <button class="btn btn-ghost btn-mensagens" type="button" id="btnMensagens">Mensagens</button>
       <span id="nomeUsuario"></span>
       <button class="perfil-foto" type="button" id="fotoUsuario" aria-label="Minha conta"></button>
     </div>
@@ -252,6 +253,39 @@
       <button class="btn btn-perigo" type="submit" id="exBtn">Continuar</button>
       <button class="btn btn-ghost" type="button" data-fechar-excluir>Cancelar</button>
     </form>
+  </div>
+</div>
+
+<!-- TELA MENSAGENS (chat) -->
+<div class="tela" id="telaChat">
+  <div class="tela-topo">
+    <div class="tela-topo-int">
+      <button class="btn btn-ghost" type="button" data-fechar>&larr; Voltar</button>
+      <h2>Mensagens</h2>
+    </div>
+  </div>
+
+  <div class="chat-layout">
+    <aside class="chat-lista" id="chatLista" aria-label="Conversas"></aside>
+
+    <section class="chat-conversa" aria-label="Conversa">
+      <div class="chat-vazio" id="chatVazio"></div>
+
+      <div class="chat-cabeca hidden" id="chatCabeca">
+        <div class="perfil-foto" id="chatAvatar" style="width:44px;height:44px;"></div>
+        <div class="chat-cabeca-txt">
+          <strong id="chatNome"></strong>
+          <span id="chatPapel"></span>
+        </div>
+      </div>
+
+      <div class="chat-msgs hidden" id="chatMsgs" aria-live="polite"></div>
+
+      <form class="chat-form hidden" id="chatForm" novalidate>
+        <input type="text" id="chatTexto" maxlength="2000" autocomplete="off" placeholder="Escreva uma mensagem" aria-label="Escrever mensagem">
+        <button class="btn btn-primary" type="submit">Enviar</button>
+      </form>
+    </section>
   </div>
 </div>
 
