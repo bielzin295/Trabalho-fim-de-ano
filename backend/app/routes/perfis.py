@@ -2,6 +2,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from app.auth import autenticar_usuario
 from app.schemas.perfil import PerfilCreate
+from supabase_client import supabase
 
 router = APIRouter(
     prefix="/perfis",
@@ -9,7 +10,29 @@ router = APIRouter(
 )
 
 
-# Listar perfis
+# LISTAR FREELANCERS PUBLICAMENTE
+@router.get("/freelancers")
+def listar_freelancers():
+    try:
+        resultado = (
+            supabase
+            .table("freelancers_publicos")
+            .select("id, nome, descricao, valor_hora")
+            .execute()
+        )
+
+        return resultado.data
+
+    except Exception as erro:
+        print("ERRO AO LISTAR FREELANCERS:", repr(erro))
+
+        raise HTTPException(
+            status_code=500,
+            detail="Não foi possível listar os freelancers."
+        )
+
+
+# LISTAR PERFIS DO USUARIO AUTENTICADO
 @router.get("/")
 def listar_perfis(
     usuario: dict = Depends(autenticar_usuario)
@@ -33,7 +56,7 @@ def listar_perfis(
         )
 
 
-# Criar perfil
+# CRIAR PERFIL
 @router.post("/", status_code=201)
 def criar_perfil(
     dados: PerfilCreate,
@@ -72,5 +95,3 @@ def criar_perfil(
             status_code=400,
             detail=str(erro)
         )
-
-
