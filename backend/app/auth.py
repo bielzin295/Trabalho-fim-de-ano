@@ -20,6 +20,7 @@ def autenticar_usuario(
     token = credenciais.credentials
 
     try:
+        # Verifica o token no Supabase Auth
         usuario = supabase.auth.get_user(token)
 
         if not usuario or not usuario.user:
@@ -28,6 +29,7 @@ def autenticar_usuario(
                 detail="Token inválido."
             )
 
+        # Cria cliente Supabase usando o token do usuário
         cliente = create_client(SUPABASE_URL, SUPABASE_KEY)
         cliente.postgrest.auth(token)
 
@@ -39,7 +41,9 @@ def autenticar_usuario(
     except HTTPException:
         raise
 
-    except Exception:
+    except Exception as erro:
+        print("ERRO REAL NA AUTENTICACAO:", repr(erro))
+
         raise HTTPException(
             status_code=401,
             detail="Não foi possível autenticar o usuário."

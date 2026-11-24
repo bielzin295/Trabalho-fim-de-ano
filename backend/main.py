@@ -8,6 +8,7 @@ from supabase_client import supabase
 from app.routes.perfis import router as perfis_router
 from app.routes.projetos import router as projetos_router
 from app.routes.propostas import router as propostas_router
+from app.routes.chat import router as chat_router
 
 from app.schemas.cadastro import CadastroCreate
 
@@ -71,13 +72,9 @@ def teste_supabase():
 @app.get("/contagem-freelancers")
 def contagem_freelancers():
     try:
-        resposta = supabase.rpc(
-            "contar_freelancers"
-        ).execute()
+        resposta = supabase.rpc("contar_freelancers").execute()
 
-        return {
-            "total_freelancers": resposta.data
-        }
+        return {"total_freelancers": resposta.data}
 
     except Exception as erro:
         print("ERRO AO CONTAR FREELANCERS:", repr(erro))
@@ -92,7 +89,6 @@ def contagem_freelancers():
 @app.post("/cadastro", status_code=201)
 def cadastro(dados: CadastroCreate):
     try:
-        # Criar conta no Supabase Auth
         resposta = supabase.auth.sign_up({
             "email": dados.email,
             "password": dados.senha,
@@ -163,7 +159,9 @@ def login(dados: LoginRequest):
         )
 
 
-# ROTAS DO SISTEMA
+# REGISTRO DAS ROTAS
 app.include_router(perfis_router)
 app.include_router(projetos_router)
 app.include_router(propostas_router)
+app.include_router(chat_router)
+

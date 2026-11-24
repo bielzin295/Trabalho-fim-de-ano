@@ -2066,542 +2066,356 @@ exForm.addEventListener('submit', e => {
 
 // ============================================================
 
-// MENSAGENS (CHAT)
-
-// Por enquanto as conversas ficam salvas só neste navegador.
-
-// Quando o backend tiver as rotas de conversas e mensagens,
-
-// só as funções de ler/salvar abaixo precisam ser trocadas.
-
+// ============================================================
+// MENSAGENS (CHAT) - CONECTADO AO BACKEND
 // ============================================================
 
-const CHAVE_CHAT = 'fp_chat';
-
-
-
 const chatLista = document.getElementById('chatLista');
-
 const chatVazio = document.getElementById('chatVazio');
-
 const chatCabeca = document.getElementById('chatCabeca');
-
 const chatMsgs = document.getElementById('chatMsgs');
-
 const chatForm = document.getElementById('chatForm');
-
 const chatTexto = document.getElementById('chatTexto');
 
-
-
 let conversaAberta = null;
+let conversasApi = [];
+let perfilAtualChat = null;
 
-
-
-function lerConversas() {
-
-     return lerLS(CHAVE_CHAT, []);
-
+function tokenChat() {
+    const sessao = sessaoAtual();
+    return sessao && sessao.token ? sessao.token : null;
 }
 
+async function carregarPerfilAtualChat() {
+    const token = tokenChat();
+    if (!token) return null;
 
+    const resposta = await apiFetch('/perfis/', { token });
+    if (!resposta.ok) return null;
 
-function salvarConversas(conversas) {
+    const lista = Array.isArray(resposta.dados)
+        ? resposta.dados
+        : (resposta.dados && Array.isArray(resposta.dados.data)
+            ? resposta.dados.data
+            : []);
 
-     return gravarLS(CHAVE_CHAT, conversas);
+    const sessao = sessaoAtual();
+    perfilAtualChat = lista.find(p =>
+        p.email && sessao && p.email.toLowerCase() === sessao.email.toLowerCase()
+    ) || lista[0] || null;
 
+    return perfilAtualChat;
 }
 
-
-
-function meuEmail() {
-
-     const sessao = sessaoAtual();
-
-     return sessao && sessao.email ? sessao.email.toLowerCase() : null;
-
+function meuIdChat() {
+    return perfilAtualChat ? perfilAtualChat.id : null;
 }
-
-
-
-function ultimaAtividade(c) {
-
-     const m = c.mensagens[c.mensagens.length - 1];
-
-     return new Date(m ? m.hora : c.criadaEm).getTime();
-
-}
-
-
-
-function conversasDoUsuario() {
-
-     const eu = meuEmail();
-
-
-
-     return lerConversas()
-
-          .filter(c => c.cliente.email === eu || c.freelancer.email === eu)
-
-          .sort((a, b) => ultimaAtividade(b) - ultimaAtividade(a));
-
-}
-
-
-
-function outraParte(c) {
-
-     return c.cliente.email === meuEmail()
-
-          ? { ...c.freelancer, papel: 'Freelancer' }
-
-          : { ...c.cliente, papel: 'Cliente' };
-
-}
-
-
-
-function fotoDoUsuario(email) {
-
-     if (USAR_API) return null;
-
-     const conta = buscarConta(email);
-
-     return conta ? conta.foto : null;
-
-}
-
-
 
 function formatarHora(iso) {
+    if (!iso) return '';
+    const data = new Date(iso);
+    if (Number.isNaN(data.getTime())) return '';
 
-     const d = new Date(iso);
+    if (data.toDateString() === new Date().toDateString()) {
+        return data.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
 
-
-
-     if (d.toDateString() === new Date().toDateString()) {
-
-          return d.toLocaleTimeString('pt-BR', {
-
-               hour: '2-digit',
-
-               minute: '2-digit'
-
-          });
-
-     }
-
-
-
-     return d.toLocaleDateString('pt-BR', {
-
-          day: '2-digit',
-
-          month: '2-digit'
-
-     });
-
+    return data.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit'
+    });
 }
 
+function ultimaAtividade(conversa) {
+    const mensagens = conversa.mensagens || [];
+    const ultima = mensagens[mensagens.length - 1];
+    return new Date(ultima ? ultima.hora : conversa.criadaEm).getTime() || 0;
+}
 
+function conversasDoUsuario() {
+    return [...conversasApi].sort((a, b) => ultimaAtividade(b) - ultimaAtividade(a));
+}
+
+function outraParte(conversa) {
+    const eu = meuIdChat();
+    const souCliente = eu && conversa.cliente_id === eu;
+
+    if (souCliente) {
+        const freelancer = freelancersApi.find(f => f.id === conversa.freelancer_id);
+        return {
+            nome: freelancer ? freelancer.nome : 'Freelancer',
+            papel: 'Freelancer',
+            foto: null
+        };
+    }
+
+    return {
+        nome: 'Cliente',
+        papel: 'Cliente',
+        foto: null
+    };
+}
+
+async function carregarConversasApi() {
+    const token = tokenChat();
+    if (!token) {
+        conversasApi = [];
+        perfilAtualChat = null;
+        return false;
+    }
+
+    await carregarPerfilAtualChat();
+
+    const resposta = await apiFetch('/chat/conversas', { token });
+    if (!resposta.ok || !Array.isArray(resposta.dados)) {
+        console.error('Erro ao carregar conversas:', resposta.dados);
+        return false;
+    }
+
+    const conversasComMensagens = await Promise.all(resposta.dados.map(async conversa => {
+        const resMensagens = await apiFetch(
+            `/chat/conversas/${conversa.id}/mensagens`,
+            { token }
+        );
+
+        const mensagens = resMensagens.ok && Array.isArray(resMensagens.dados)
+            ? resMensagens.dados.map(m => ({
+                de: m.remetente_id,
+                texto: m.conteudo,
+                hora: m.enviado_em
+            }))
+            : [];
+
+        return {
+            id: conversa.id,
+            projeto_id: conversa.projeto_id,
+            cliente_id: conversa.cliente_id,
+            freelancer_id: conversa.freelancer_id,
+            criadaEm: conversa.criado_em,
+            mensagens
+        };
+    }));
+
+    conversasApi = conversasComMensagens;
+    return true;
+}
 
 function renderChat() {
-
-     const eu = meuEmail();
-
-     const conversas = conversasDoUsuario();
-
-     const sessao = sessaoAtual();
-
-
-
-     if (!conversas.some(c => c.id === conversaAberta)) {
-
-          conversaAberta = conversas.length ? conversas[0].id : null;
-
-     }
-
-
-
-     // Lista de conversas
-
-     if (!conversas.length) {
-
-          chatLista.innerHTML = '<p class="chat-lista-vazio">Você ainda não tem conversas.</p>';
-
-     } else {
-
-          chatLista.innerHTML = conversas.map(c => {
-
-               const outra = outraParte(c);
-
-               const ultima = c.mensagens[c.mensagens.length - 1];
-
-
-
-               return `
-
-                    <button type="button" class="chat-item${c.id === conversaAberta ? ' ativa' : ''}" data-id="${esc(c.id)}">
-
-                         <div class="perfil-foto" style="width:44px;height:44px;" data-email="${esc(outra.email)}"></div>
-
-                         <div class="chat-item-txt">
-
-                              <div class="chat-item-linha">
-
-                                   <strong>${esc(outra.nome)}</strong>
-
-                                   <span>${ultima ? esc(formatarHora(ultima.hora)) : ''}</span>
-
-                              </div>
-
-                              <div class="chat-item-previa">${ultima ? esc(ultima.texto) : 'Nenhuma mensagem ainda'}</div>
-
-                         </div>
-
-                    </button>
-
-               `;
-
-          }).join('');
-
-
-
-          chatLista.querySelectorAll('.perfil-foto[data-email]').forEach(el => {
-
-               pintarFoto(el, fotoDoUsuario(el.dataset.email));
-
-          });
-
-     }
-
-
-
-     // Conversa aberta
-
-     const atual = conversas.find(c => c.id === conversaAberta);
-
-
-
-     chatVazio.classList.toggle('hidden', !!atual);
-
-     chatCabeca.classList.toggle('hidden', !atual);
-
-     chatMsgs.classList.toggle('hidden', !atual);
-
-     chatForm.classList.toggle('hidden', !atual);
-
-
-
-     if (!atual) {
-
-          chatVazio.textContent = sessao && sessao.tipo === 'freelancer'
-
-               ? 'Quando um cliente falar com você, a conversa aparece aqui.'
-
-               : 'Escolha um freelancer na lista e clique em "Conversar" para começar.';
-
-          return;
-
-     }
-
-
-
-     const outra = outraParte(atual);
-
-
-
-     document.getElementById('chatNome').textContent = outra.nome;
-
-     document.getElementById('chatPapel').textContent = outra.papel;
-
-     pintarFoto(document.getElementById('chatAvatar'), fotoDoUsuario(outra.email));
-
-
-
-     chatMsgs.innerHTML = atual.mensagens.length
-
-          ? atual.mensagens.map(m => `
-
-                    <div class="chat-msg ${m.de === eu ? 'minha' : 'deles'}">
-
-                         <div class="chat-balao">${esc(m.texto)}</div>
-
-                         <div class="chat-hora">${esc(formatarHora(m.hora))}</div>
-
+    const sessao = sessaoAtual();
+    const eu = meuIdChat();
+    const conversas = conversasDoUsuario();
+
+    if (!conversas.some(c => c.id === conversaAberta)) {
+        conversaAberta = conversas.length ? conversas[0].id : null;
+    }
+
+    if (!conversas.length) {
+        chatLista.innerHTML = '<p class="chat-lista-vazio">Você ainda não tem conversas.</p>';
+    } else {
+        chatLista.innerHTML = conversas.map(c => {
+            const outra = outraParte(c);
+            const ultima = c.mensagens[c.mensagens.length - 1];
+
+            return `
+                <button type="button" class="chat-item${c.id === conversaAberta ? ' ativa' : ''}" data-id="${esc(c.id)}">
+                    <div class="perfil-foto sem-foto" style="width:44px;height:44px;"></div>
+                    <div class="chat-item-txt">
+                        <div class="chat-item-linha">
+                            <strong>${esc(outra.nome)}</strong>
+                            <span>${ultima ? esc(formatarHora(ultima.hora)) : ''}</span>
+                        </div>
+                        <div class="chat-item-previa">${ultima ? esc(ultima.texto) : 'Nenhuma mensagem ainda'}</div>
                     </div>
+                </button>
+            `;
+        }).join('');
+    }
 
-               `).join('')
+    const atual = conversas.find(c => c.id === conversaAberta);
 
-          : '<p class="chat-aviso">Envie a primeira mensagem.</p>';
+    chatVazio.classList.toggle('hidden', !!atual);
+    chatCabeca.classList.toggle('hidden', !atual);
+    chatMsgs.classList.toggle('hidden', !atual);
+    chatForm.classList.toggle('hidden', !atual);
 
+    if (!atual) {
+        chatVazio.textContent = sessao && sessao.tipo === 'freelancer'
+            ? 'Quando um cliente falar com você, a conversa aparece aqui.'
+            : 'Escolha um freelancer que já enviou uma proposta para conversar.';
+        return;
+    }
 
+    const outra = outraParte(atual);
+    document.getElementById('chatNome').textContent = outra.nome;
+    document.getElementById('chatPapel').textContent = outra.papel;
+    pintarFoto(document.getElementById('chatAvatar'), null);
 
-     chatMsgs.scrollTop = chatMsgs.scrollHeight;
+    chatMsgs.innerHTML = atual.mensagens.length
+        ? atual.mensagens.map(m => `
+            <div class="chat-msg ${m.de === eu ? 'minha' : 'deles'}">
+                <div class="chat-balao">${esc(m.texto)}</div>
+                <div class="chat-hora">${esc(formatarHora(m.hora))}</div>
+            </div>
+        `).join('')
+        : '<p class="chat-aviso">Envie a primeira mensagem.</p>';
 
+    chatMsgs.scrollTop = chatMsgs.scrollHeight;
 }
 
+async function abrirChat(id) {
+    if (!sessaoAtual()) {
+        entrar();
+        return;
+    }
 
+    fecharModais();
+    conversaAberta = id || conversaAberta;
+    telaChat.classList.add('open');
+    chatLista.innerHTML = '<p class="chat-lista-vazio">Carregando conversas...</p>';
 
-function abrirChat(id) {
+    const ok = await carregarConversasApi();
+    if (!ok) {
+        chatLista.innerHTML = '<p class="chat-lista-vazio">Não foi possível carregar as conversas. Confira se você está conectado.</p>';
+        return;
+    }
 
-     if (!sessaoAtual()) {
-
-          entrar();
-
-          return;
-
-     }
-
-
-
-     fecharModais();
-
-     conversaAberta = id || conversaAberta;
-
-     renderChat();
-
-     telaChat.classList.add('open');
-
+    renderChat();
 }
 
+async function iniciarConversa(idFreelancer) {
+    const sessao = sessaoAtual();
+    const token = tokenChat();
 
+    if (!sessao || !token) {
+        entrar();
+        return;
+    }
 
-function iniciarConversa(emailFreelancer) {
+    if (sessao.tipo !== 'cliente') {
+        alert('Somente clientes podem iniciar uma conversa com um freelancer.');
+        return;
+    }
 
-     const sessao = sessaoAtual();
+    const [resProjetos, resPropostas] = await Promise.all([
+        apiFetch('/projetos/', { token }),
+        apiFetch('/propostas/', { token })
+    ]);
 
+    if (!resProjetos.ok || !resPropostas.ok ||
+        !Array.isArray(resProjetos.dados) || !Array.isArray(resPropostas.dados)) {
+        alert('Não foi possível verificar seus projetos e propostas. Tente novamente.');
+        return;
+    }
 
+    const projetosDoCliente = new Set(resProjetos.dados.map(p => p.id));
+    const proposta = resPropostas.dados.find(p =>
+        p.freelancer_id === idFreelancer && projetosDoCliente.has(p.projeto_id)
+    );
 
-     if (!sessao) {
+    if (!proposta) {
+        alert('Você ainda não tem uma proposta deste freelancer em um dos seus projetos. Quando ele enviar uma proposta, poderá iniciar a conversa.');
+        return;
+    }
 
-          entrar();
+    const criada = await apiFetch('/chat/conversas', {
+        metodo: 'POST',
+        token,
+        corpo: {
+            projeto_id: proposta.projeto_id,
+            freelancer_id: idFreelancer
+        }
+    });
 
-          return;
+    if (!criada.ok || !criada.dados || !criada.dados.id) {
+        alert(mensagemErroApi(criada, 'Não foi possível iniciar a conversa'));
+        return;
+    }
 
-     }
-
-
-
-     const freelancer = lerLS(CHAVE_CONTAS, [])
-
-          .find(c => c.email === emailFreelancer && c.tipo === 'freelancer');
-
-
-
-     if (!freelancer) return;
-
-
-
-     const eu = meuEmail();
-
-     const conversas = lerConversas();
-
-
-
-     let conversa = conversas.find(c =>
-
-          c.cliente.email === eu && c.freelancer.email === freelancer.email
-
-     );
-
-
-
-     if (!conversa) {
-
-          conversa = {
-
-               id: 'c' + Date.now(),
-
-               cliente: { email: eu, nome: sessao.nome },
-
-               freelancer: { email: freelancer.email, nome: freelancer.nome },
-
-               criadaEm: new Date().toISOString(),
-
-               mensagens: []
-
-          };
-
-
-
-          conversas.push(conversa);
-
-          salvarConversas(conversas);
-
-     }
-
-
-
-     abrirChat(conversa.id);
-
-     chatTexto.focus();
-
+    await abrirChat(criada.dados.id);
+    chatTexto.focus();
 }
 
-
-
-document.getElementById('btnMensagens')
-
-     .addEventListener('click', () => abrirChat());
-
-
+document.getElementById('btnMensagens').addEventListener('click', () => abrirChat());
 
 document.getElementById('freelancerGrid').addEventListener('click', e => {
+    const botao = e.target.closest('.btn-conversar');
+    if (!botao) return;
 
-     const botao = e.target.closest('.btn-conversar');
+    if (!sessaoAtual()) {
+        entrar();
+        return;
+    }
 
+    const idFreelancer = botao.dataset.id;
+    if (!idFreelancer) {
+        alert('Não foi possível identificar este freelancer. Atualize a página e tente novamente.');
+        return;
+    }
 
-
-     if (!botao) return;
-
-
-
-     if (!sessaoAtual()) {
-
-          entrar();
-
-          return;
-
-     }
-
-
-
-     if (botao.dataset.email) {
-
-          iniciarConversa(botao.dataset.email);
-
-          return;
-
-     }
-
-
-
-     alert('A lista de freelancers já está conectada ao Supabase, mas o chat com esses perfis ainda não foi conectado ao backend.');
-
+    iniciarConversa(idFreelancer);
 });
-
-
 
 chatLista.addEventListener('click', e => {
+    const item = e.target.closest('.chat-item');
+    if (!item) return;
 
-     const item = e.target.closest('.chat-item');
-
-
-
-     if (!item) return;
-
-
-
-     conversaAberta = item.dataset.id;
-
-     renderChat();
-
+    conversaAberta = item.dataset.id;
+    renderChat();
 });
 
+chatForm.addEventListener('submit', async e => {
+    e.preventDefault();
 
+    const texto = chatTexto.value.trim();
+    const token = tokenChat();
+    if (!texto || !conversaAberta || !token) return;
 
-chatForm.addEventListener('submit', e => {
+    const botaoEnviar = chatForm.querySelector('button[type="submit"]');
+    if (botaoEnviar) botaoEnviar.disabled = true;
 
-     e.preventDefault();
+    const resposta = await apiFetch(`/chat/conversas/${conversaAberta}/mensagens`, {
+        metodo: 'POST',
+        token,
+        corpo: { conteudo: texto }
+    });
 
+    if (botaoEnviar) botaoEnviar.disabled = false;
 
+    if (!resposta.ok) {
+        chatMsgs.insertAdjacentHTML(
+            'beforeend',
+            `<p class="chat-aviso">${esc(mensagemErroApi(resposta, 'Não foi possível enviar a mensagem'))}</p>`
+        );
+        return;
+    }
 
-     const texto = chatTexto.value.trim();
-
-
-
-     if (!texto || !conversaAberta) return;
-
-
-
-     const conversas = lerConversas();
-
-     const conversa = conversas.find(c => c.id === conversaAberta);
-
-
-
-     if (!conversa) return;
-
-
-
-     conversa.mensagens.push({
-
-          de: meuEmail(),
-
-          texto,
-
-          hora: new Date().toISOString()
-
-     });
-
-
-
-     if (!salvarConversas(conversas)) {
-
-          chatMsgs.insertAdjacentHTML(
-
-               'beforeend',
-
-               '<p class="chat-aviso">Não foi possível salvar a mensagem neste navegador.</p>'
-
-          );
-
-          return;
-
-     }
-
-
-
-     chatTexto.value = '';
-
-     renderChat();
-
-     chatTexto.focus();
-
+    chatTexto.value = '';
+    await carregarConversasApi();
+    renderChat();
+    chatTexto.focus();
 });
-
-
 
 // ----- Inicialização -----
-
 atualizarTopo();
-
 atualizarContagem();
-
 renderGrid();
 
-
-
 // ----- Logo: voltar ao início -----
-
 document.getElementById('logoInicio').addEventListener('click', e => {
-
-     e.preventDefault();
-
-     window.scrollTo({ top: 0, behavior: 'smooth' });
-
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 });
-
-
 
 // ----- Botões principais -----
-
 document.getElementById('heroContratar').addEventListener('click', e => {
-
-     e.preventDefault();
-
-     cadastrarCliente();
-
+    e.preventDefault();
+    cadastrarCliente();
 });
 
-
-
 document.getElementById('heroFreelancer').addEventListener('click', e => {
-
-     e.preventDefault();
-
-     cadastrarFreelancer();
-
+    e.preventDefault();
+    cadastrarFreelancer();
 });
