@@ -184,3 +184,12 @@ input:disabled{opacity:.6;cursor:not-allowed;}
   .user-area{gap:8px;}
   #nomeUsuario{display:none;}
 }
+/* ===== Projetos, propostas e caixa de entrada ===== */
+.badge{display:inline-block;min-width:18px;padding:0 6px;margin-left:6px;border-radius:999px;background:var(--teal);color:#fff;font-size:12px;line-height:18px;text-align:center;}
+.btn-proposta{padding:7px 14px;font-size:14px;}
+.card .meta{font-size:13px;color:var(--muted);margin:0 0 12px;}
+.job{flex-wrap:wrap;}
+.job-acoes{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.st{font-size:12px;font-weight:600;padding:2px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);}
+.st.aceita{color:#2e8b57;border-color:#2e8b57;}
+.st.recusada{color:#c0392b;border-color:#c0392b;}
