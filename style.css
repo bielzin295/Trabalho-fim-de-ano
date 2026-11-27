@@ -198,13 +198,13 @@ input:disabled{opacity:.6;cursor:not-allowed;}
 button.chip{font-family:inherit;}
 .chip:hover{border-color:var(--teal);}
 .filters{align-items:center;}
-#freelancerGrid .card{display:flex;flex-direction:column;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;}
-#freelancerGrid .card:hover{transform:translateY(-3px);border-color:var(--teal);box-shadow:0 12px 28px rgba(0,0,0,.09);}
-#freelancerGrid .perfil-foto{width:56px !important;height:56px !important;}
-#freelancerGrid .card h3{font-size:18px;}
-#freelancerGrid .card p.desc{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:4.4em;}
-#freelancerGrid .card-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);}
-#freelancerGrid .rate{background:color-mix(in srgb, var(--gold) 16%, var(--card));padding:4px 12px;border-radius:999px;font-size:13px;}
+#freelancerGrid .card,#todosGrid .card{display:flex;flex-direction:column;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;}
+#freelancerGrid .card:hover,#todosGrid .card:hover{transform:translateY(-3px);border-color:var(--teal);box-shadow:0 12px 28px rgba(0,0,0,.09);}
+#freelancerGrid .perfil-foto,#todosGrid .perfil-foto{width:56px !important;height:56px !important;}
+#freelancerGrid .card h3,#todosGrid .card h3{font-size:18px;}
+#freelancerGrid .card p.desc,#todosGrid .card p.desc{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:4.4em;}
+#freelancerGrid .card-foot,#todosGrid .card-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);}
+#freelancerGrid .rate,#todosGrid .rate{background:color-mix(in srgb, var(--gold) 16%, var(--card));padding:4px 12px;border-radius:999px;font-size:13px;}
 .av-linha{display:flex;align-items:center;gap:6px;font-size:13px;margin-top:2px;background:none;border:none;padding:0;color:var(--muted);font-family:inherit;}
 .av-link{cursor:pointer;}
 .av-link:hover b{text-decoration:underline;}
@@ -217,3 +217,23 @@ button.chip{font-family:inherit;}
 .av-item:last-child{border-bottom:none;}
 .av-top{display:flex;justify-content:space-between;font-size:14px;gap:8px;}
 .mu{color:var(--muted);font-size:13px;}
+
+/* ===== Freelancers: cartões compactos e filtros ===== */
+#freelancerGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+#todosGrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;}
+#freelancerGrid .card,#todosGrid .card{padding:14px;}
+#freelancerGrid .card-top,#todosGrid .card-top{flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:8px;}
+#freelancerGrid .perfil-foto,#todosGrid .perfil-foto{width:44px !important;height:44px !important;}
+#freelancerGrid .card h3,#todosGrid .card h3{font-size:16px;}
+#freelancerGrid .card .role,#todosGrid .card .role{font-size:13px;}
+#freelancerGrid .card p.desc,#todosGrid .card p.desc{font-size:13px;-webkit-line-clamp:2;min-height:2.9em;margin:6px 0 4px;}
+#freelancerGrid .btn-proposta,#todosGrid .btn-proposta{padding:6px 12px;font-size:13px;}
+#freelancerGrid .rate,#todosGrid .rate{font-size:12px;padding:4px 10px;}
+.filters select{width:auto;max-width:100%;padding:8px 14px;border-radius:999px;font-size:14px;background:var(--card);cursor:pointer;}
+@media (max-width:980px){#freelancerGrid,#todosGrid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media (max-width:520px){#freelancerGrid,#todosGrid{grid-template-columns:1fr;}}
+
+
+#telaFreelancers .tela-topo-int,#telaFreelancers .tela-corpo{max-width:1080px;}
+#telaFreelancers .tela-corpo{display:block;}
+#telaFreelancers .tela-sub{margin-bottom:16px;}

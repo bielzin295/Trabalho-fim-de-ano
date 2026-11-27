@@ -1,3 +1,4 @@
+
 from pydantic import BaseModel
 from typing import Optional
 
@@ -9,3 +10,5 @@ class PerfilCreate(BaseModel):
     tipo: str
     descricao: Optional[str] = None
     valor_hora: Optional[float] = None
+    cidade: Optional[str] = None
+    especialidade: Optional[str] = None

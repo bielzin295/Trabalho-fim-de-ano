@@ -276,9 +276,9 @@ let freelancersApiCarregados = false;
 
 
 
-function renderizarCardsFreelancers(lista) {
+function renderizarCardsFreelancers(lista, alvoGrid) {
 
-     const grid = document.getElementById('freelancerGrid');
+     const grid = alvoGrid || document.getElementById('freelancerGrid');
 
 
 
@@ -286,7 +286,7 @@ function renderizarCardsFreelancers(lista) {
 
 
 
-     lista = window.fpFiltrarDestaque ? window.fpFiltrarDestaque(lista) : lista;
+     if (!alvoGrid && window.fpFiltrarDestaque) lista = window.fpFiltrarDestaque(lista);
 
      const sessaoGrid = sessaoAtual();
 
@@ -300,7 +300,7 @@ function renderizarCardsFreelancers(lista) {
 
           grid.innerHTML =
 
-               '<p style="color:var(--muted);">Nenhum freelancer cadastrado ainda.</p>';
+               '<p style="color:var(--muted);">' + (window.fpMsgVazio ? window.fpMsgVazio() : 'Nenhum freelancer cadastrado ainda.') + '</p>';
 
           return;
 
@@ -320,7 +320,7 @@ function renderizarCardsFreelancers(lista) {
 
                          <h3>${esc(f.nome)}</h3>
 
-                         <div class="role">Freelancer</div>${window.fpEstrelas ? window.fpEstrelas(f) : ''}
+                         <div class="role">${esc(f.profissao || 'Freelancer')}</div>${f.cidade ? `<div class="role">${esc(f.cidade)}</div>` : ''}${window.fpEstrelas ? window.fpEstrelas(f) : ''}
 
                     </div>
 
@@ -338,7 +338,7 @@ function renderizarCardsFreelancers(lista) {
 
                          ${f.valorHora !== null && f.valorHora !== undefined && f.valorHora !== ''
 
-                              ? 'R$ ' + esc(f.valorHora) + '/hora'
+                              ? 'R$ ' + esc(f.valorHora) + '/h'
 
                               : 'Valor a combinar'}
 
@@ -346,7 +346,7 @@ function renderizarCardsFreelancers(lista) {
 
                     ${mostrarConversar
 
-                         ? `<button class="btn btn-primary btn-proposta" type="button" data-chave="${esc(f.email || f.id)}" data-nome="${esc(f.nome)}">Enviar proposta</button>`
+                         ? `<button class="btn btn-primary btn-proposta" type="button" data-chave="${esc(f.email || f.id)}" data-nome="${esc(f.nome)}">Proposta</button>`
 
                          : ''}
 
@@ -430,7 +430,11 @@ async function carregarFreelancersApi() {
 
                foto: null,
 
-               email: null
+               email: null,
+
+               profissao: f.profissao || null,
+
+               cidade: f.cidade || null
 
           }));
 
@@ -1245,6 +1249,8 @@ cadastroForm.addEventListener('submit', async e => {
      const valorHora = document.getElementById('cadValorHora').value;
 
      const descricao = document.getElementById('cadDescricao').value.trim();
+     const profissao = document.getElementById('cadProfissao').value;
+     const cidade = document.getElementById('cadCidade').value;
 
 
 
@@ -1308,6 +1314,14 @@ cadastroForm.addEventListener('submit', async e => {
 
      }
 
+     if (tipoConta === 'freelancer' && (!profissao || !cidade)) {
+
+          mostrarMsg(cadMsg, 'Escolha a sua profissão e a sua cidade.', 'erro');
+
+          return;
+
+     }
+
 
 
      if (USAR_API) {
@@ -1331,6 +1345,10 @@ cadastroForm.addEventListener('submit', async e => {
           if (tipoConta === 'freelancer') {
 
                if (descricao) corpo.descricao = descricao;
+
+               if (profissao) corpo.profissao = profissao;
+
+               if (cidade) corpo.cidade = cidade;
 
                if (valorHora) corpo.valor_hora = Number(valorHora);
 
@@ -1522,7 +1540,11 @@ cadastroForm.addEventListener('submit', async e => {
 
                : null,
 
-          descricao: tipoConta === 'freelancer' ? descricao : null
+          descricao: tipoConta === 'freelancer' ? descricao : null,
+
+          profissao: tipoConta === 'freelancer' ? profissao : null,
+
+          cidade: tipoConta === 'freelancer' ? cidade : null
 
      };
 
@@ -2914,19 +2936,19 @@ document.getElementById('heroFreelancer').addEventListener('click', e => {
 //   GET  /freelancers/{id}/avaliacoes     -> [{nota, comentario, autor_nome, criada_em}]
 //   POST /avaliacoes                      {freelancer_id, nota (1 a 5), comentario}  (cliente com proposta aceita)
 //   Os itens de /caixa-de-entrada devem trazer freelancer_id, para o botão "Avaliar".
-// Regra do destaque: só freelancers com nota média >= 4, no máximo 6, do melhor para o pior.
+// Regra do destaque: os 6 melhores (nota média, depois nº de avaliações). A tela "Freelancers" lista todos, do melhor para o pior.
 // ============================================================
 (function () {
   const AV_API = false;
   const LS = 'fp_avaliacoes';
-  const MIN = 4, MAX = 6;
+  const MAX = 6;
   const $ = id => document.getElementById(id);
   const ler = () => { try { return JSON.parse(localStorage.getItem(LS)) || []; } catch (e) { return []; } };
   const gravar = d => { try { localStorage.setItem(LS, JSON.stringify(d)); return true; } catch (e) { return false; } };
   const chaveDe = f => String(f.email || f.id);
   const estr = m => { const n = Math.round(m); return '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5 - n); };
   const fmt = m => m.toFixed(1).replace('.', ',');
-  let resumoApi = {}, modo = 'melhores', semTop = false, notaSel = 0, alvo = null;
+  let resumoApi = {}, notaSel = 0, alvo = null;
 
   function resumo(chave) {
     if (AV_API) return resumoApi[chave] || { media: 0, total: 0 };
@@ -2963,24 +2985,59 @@ document.getElementById('heroFreelancer').addEventListener('click', e => {
     if (!r.total) return '<div class="av-linha av-vazio">Sem avaliações ainda</div>';
     return `<button type="button" class="av-linha av-link" data-ver="${esc(chaveDe(f))}" data-nome="${esc(f.nome)}"><span class="stars">${estr(r.media)}</span> <b>${fmt(r.media)}</b> <span>(${r.total})</span></button>`;
   };
+  const PROFISSOES = ['Design gráfico', 'Desenvolvimento web', 'Redação e conteúdo', 'Edição de vídeo', 'Fotografia', 'Marketing digital', 'Tradução', 'Música e áudio', 'Consultoria', 'Outros'];
+  const CIDADES = ['São Paulo', 'Campinas', 'Santos', 'Sorocaba', 'Ribeirão Preto', 'São José dos Campos', 'Sumaré', 'Osasco', 'Guarulhos', 'São Bernardo do Campo', 'Santo André', 'Jundiaí', 'Piracicaba', 'Bauru', 'Mogi das Cruzes', 'São José do Rio Preto', 'Taubaté', 'Limeira', 'Americana', 'Outra cidade'];
+  let catSel = '', cidSel = '', catT = '', cidT = '', baseVazia = false;
+  const opcoes = (arr, ph) => '<option value="">' + ph + '</option>' + arr.map(x => '<option>' + esc(x) + '</option>').join('');
+  if ($('cadProfissao')) $('cadProfissao').innerHTML = opcoes(PROFISSOES, 'Selecione');
+  if ($('cadCidade')) $('cadCidade').innerHTML = opcoes(CIDADES, 'Selecione');
+
+  const ordenar = arr => arr.map(f => ({ f, r: resumo(chaveDe(f)) }))
+    .sort((a, b) => b.r.media - a.r.media || b.r.total - a.r.total || String(a.f.nome).localeCompare(String(b.f.nome), 'pt-BR')).map(x => x.f);
+  const passa = (f, cat, cid) => (!cat || f.profissao === cat) && (!cid || f.cidade === cid);
+  const listaBase = () => USAR_API ? freelancersApi : lerLS(CHAVE_CONTAS, []).filter(c => c.tipo === 'freelancer');
+  const caixa = (attr, id, ph, arr, atual) => `<select ${attr}="${id}" aria-label="${ph}"><option value="">${ph}</option>${arr.map(x => `<option${x === atual ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
+
+  // destaque: os 6 melhores (respeitando profissão e cidade escolhidas)
   window.fpFiltrarDestaque = lista => {
-    let saida = lista;
-    semTop = false;
-    if (modo === 'melhores') {
-      const top = lista.map(f => ({ f, r: resumo(chaveDe(f)) })).filter(x => x.r.total && x.r.media >= MIN)
-        .sort((a, b) => b.r.media - a.r.media || b.r.total - a.r.total).slice(0, MAX).map(x => x.f);
-      if (top.length) saida = top; else semTop = true;
-    }
+    const saida = ordenar(lista.filter(f => passa(f, catSel, cidSel))).slice(0, MAX);
     desenharFiltros();
+    if ($('telaFreelancers').classList.contains('open')) renderTodos();
+    baseVazia = !lista.length;
     return saida;
   };
+  window.fpMsgVazio = () => baseVazia ? 'Nenhum freelancer cadastrado ainda.' : 'Nenhum freelancer encontrado com esses filtros.';
   function desenharFiltros() {
     const el = $('filters');
     if (!el) return;
-    el.innerHTML = `<button type="button" class="chip${modo === 'melhores' ? ' active' : ''}" data-modo="melhores">Melhores avaliados</button>
-      <button type="button" class="chip${modo === 'todos' ? ' active' : ''}" data-modo="todos">Todos os freelancers</button>`
-      + (modo === 'melhores' && semTop ? '<span class="av-dica">Ainda não há avaliações altas. Mostrando todos.</span>' : '');
+    el.innerHTML = caixa('data-f', 'cat', 'Todas as profissões', PROFISSOES, catSel) + caixa('data-f', 'cid', 'Todas as cidades', CIDADES, cidSel)
+      + '<button type="button" class="chip" data-todos style="margin-left:auto;">Ver todos os freelancers &rarr;</button>';
   }
+
+  // tela "Freelancers": todos, do mais para o menos avaliado
+  document.body.insertAdjacentHTML('beforeend', `
+    <div class="tela" id="telaFreelancers">
+      <div class="tela-topo"><div class="tela-topo-int">
+        <button class="btn btn-ghost" type="button" id="tfVoltar">&larr; Voltar</button><h2>Freelancers</h2>
+      </div></div>
+      <div class="tela-corpo">
+        <p class="tela-sub">Todos os freelancers cadastrados, dos mais bem avaliados aos menos avaliados.</p>
+        <div class="filters" id="tfFiltros"></div>
+        <div class="grid" id="todosGrid"></div>
+      </div>
+    </div>`);
+  function renderTodos() {
+    const grid = $('todosGrid');
+    $('tfFiltros').innerHTML = caixa('data-t', 'cat', 'Todas as profissões', PROFISSOES, catT) + caixa('data-t', 'cid', 'Todas as cidades', CIDADES, cidT);
+    if (USAR_API && !freelancersApiCarregados) { grid.innerHTML = '<p style="color:var(--muted);">Carregando freelancers...</p>'; renderGrid(); return; }
+    const base = listaBase();
+    baseVazia = !base.length;
+    renderizarCardsFreelancers(ordenar(base.filter(f => passa(f, catT, cidT))), grid);
+  }
+  function abrirTodos() { fecharModais(); renderTodos(); $('telaFreelancers').classList.add('open'); }
+  $('tfVoltar').addEventListener('click', () => $('telaFreelancers').classList.remove('open'));
+  const linkNav = document.querySelector('nav a[href="#freelancers"]');
+  if (linkNav) linkNav.addEventListener('click', e => { e.preventDefault(); abrirTodos(); });
 
   // ---------- janelas ----------
   document.body.insertAdjacentHTML('beforeend', `
@@ -3002,7 +3059,7 @@ document.getElementById('heroFreelancer').addEventListener('click', e => {
   [$('vaFechar'), $('avFechar')].forEach(b => b.addEventListener('click', fechar));
   [$('modalVerAval'), $('modalAval')].forEach(m => m.addEventListener('click', e => { if (e.target === m) fechar(); }));
   const fecharOriginal = window.fecharModais;
-  window.fecharModais = function () { fecharOriginal(); fechar(); };
+  window.fecharModais = function () { fecharOriginal(); fechar(); $('telaFreelancers').classList.remove('open'); };
 
   async function ver(chave, nome) {
     $('vaTitulo').textContent = nome;
@@ -3039,9 +3096,15 @@ document.getElementById('heroFreelancer').addEventListener('click', e => {
   });
 
   document.addEventListener('click', e => {
-    const v = e.target.closest('[data-ver]'), m = e.target.closest('[data-modo]');
+    const v = e.target.closest('[data-ver]');
     if (v) ver(v.dataset.ver, v.dataset.nome);
-    if (m) { modo = m.dataset.modo; renderGrid(); }
+    if (e.target.closest('[data-todos]')) abrirTodos();
+  });
+
+  document.addEventListener('change', e => {
+    const f = e.target.closest('[data-f]'), t = e.target.closest('[data-t]');
+    if (f) { if (f.dataset.f === 'cat') catSel = f.value; else cidSel = f.value; renderGrid(); }
+    if (t) { if (t.dataset.t === 'cat') catT = t.value; else cidT = t.value; renderTodos(); }
   });
 
   if (AV_API) carregarResumoApi();

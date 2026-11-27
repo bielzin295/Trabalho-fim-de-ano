@@ -7,12 +7,12 @@ from fastapi import (
     HTTPException,
     Depends,
     UploadFile,
-    File
+    File,
+    Query
 )
 
 from app.auth import autenticar_usuario
 from app.schemas.perfil import PerfilCreate
-from supabase_client import supabase
 
 
 router = APIRouter(
@@ -21,21 +21,42 @@ router = APIRouter(
 )
 
 
-# LISTAR FREELANCERS PUBLICAMENTE
+# LISTAR FREELANCERS PUBLICAMENTE COM FILTROS
 @router.get("/freelancers")
-def listar_freelancers():
+def listar_freelancers(
+    cidade: str | None = Query(default=None),
+    especialidade: str | None = Query(default=None)
+):
     try:
-        resultado = (
+        from supabase_client import supabase
+
+        consulta = (
             supabase
             .table("freelancers_publicos")
-            .select("id, nome, descricao, valor_hora")
-            .execute()
+            .select(
+                "id, nome, descricao, valor_hora, cidade, especialidade"
+            )
         )
+
+        if cidade:
+            consulta = consulta.ilike(
+                "cidade",
+                f"%{cidade.strip()}%"
+            )
+
+        if especialidade:
+            consulta = consulta.ilike(
+                "especialidade",
+                f"%{especialidade.strip()}%"
+            )
+
+        resultado = consulta.execute()
 
         return resultado.data
 
     except Exception as erro:
-        print("ERRO AO LISTAR FREELANCERS:", repr(erro))
+        print("\nERRO AO LISTAR FREELANCERS:", repr(erro))
+        traceback.print_exc()
 
         raise HTTPException(
             status_code=500,
@@ -60,6 +81,7 @@ def listar_perfis(
 
     except Exception as erro:
         print("ERRO AO LISTAR PERFIS:", repr(erro))
+        traceback.print_exc()
 
         raise HTTPException(
             status_code=500,
@@ -83,7 +105,9 @@ def criar_perfil(
             "telefone": dados.telefone,
             "tipo": dados.tipo,
             "descricao": dados.descricao,
-            "valor_hora": dados.valor_hora
+            "valor_hora": dados.valor_hora,
+            "cidade": dados.cidade,
+            "especialidade": dados.especialidade
         }
 
         resultado = (
@@ -116,7 +140,6 @@ async def enviar_foto_perfil(
     try:
         print("INICIANDO ENVIO DA FOTO DE PERFIL")
 
-        # FORMATOS PERMITIDOS
         tipos_permitidos = {
             "image/jpeg": "jpg",
             "image/png": "png",
@@ -129,10 +152,8 @@ async def enviar_foto_perfil(
                 detail="Formato inválido. Envie JPG, PNG ou WEBP."
             )
 
-        # LER IMAGEM
         conteudo = await arquivo.read()
 
-        # LIMITE DE 5 MB
         limite = 5 * 1024 * 1024
 
         if not conteudo:
@@ -149,7 +170,6 @@ async def enviar_foto_perfil(
 
         print("IMAGEM VALIDADA COM SUCESSO")
 
-        # IDENTIFICAR USUARIO
         usuario_id = usuario["id"]
 
         extensao = tipos_permitidos[arquivo.content_type]
@@ -160,7 +180,6 @@ async def enviar_foto_perfil(
 
         cliente = usuario["supabase"]
 
-        # ENVIAR IMAGEM PARA O STORAGE
         print("ENVIANDO IMAGEM PARA O SUPABASE STORAGE")
 
         cliente.storage.from_("fotos-perfil").upload(
@@ -173,15 +192,11 @@ async def enviar_foto_perfil(
 
         print("IMAGEM ENVIADA AO STORAGE COM SUCESSO")
 
-        # GERAR URL PUBLICA
         foto_url = cliente.storage.from_(
             "fotos-perfil"
         ).get_public_url(nome_arquivo)
 
         print("URL PUBLICA GERADA")
-
-        # ATUALIZAR FOTO NA TABELA PERFIS
-        print("ATUALIZANDO FOTO NA TABELA PERFIS")
 
         resultado = (
             cliente
